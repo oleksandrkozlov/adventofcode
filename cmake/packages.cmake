@@ -1,0 +1,7 @@
+find_package(PkgConfig REQUIRED)
+find_package(fmt REQUIRED)
+find_package(range-v3 REQUIRED)
+find_package(Boost REQUIRED)
+find_package(SymEngine REQUIRED)
+pkg_check_modules(gmpxx REQUIRED IMPORTED_TARGET "gmpxx")
+link_libraries(fmt::fmt range-v3::range-v3 PkgConfig::gmpxx pthread Boost::boost symengine)
