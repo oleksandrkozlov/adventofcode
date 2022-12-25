@@ -18,4 +18,5 @@ add_compile_options(
     -Wpedantic
     -Wshadow
     -Wunused
+    -fmax-errors=1
 )
