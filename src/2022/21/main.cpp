@@ -1,6 +1,5 @@
 #include "input.h"
 
-#include <boost/functional/hash.hpp>
 #include <fmt/core.h>
 #include <range/v3/all.hpp>
 #include <symengine/expression.h>
