@@ -5,6 +5,9 @@ project(adventofcode LANGUAGES CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 list(PREPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+option(WITH_SYMENGINE "With SymEngine" ON)
+option(WITH_GMPXX "With gmpxx" ON)
+
 include(flags)
 include(packages)
 
