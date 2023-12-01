@@ -27,3 +27,4 @@ if (WITH_CCACHE)
 endif()
 
 add_subdirectory(src/2022)
+add_subdirectory(src/2023)
