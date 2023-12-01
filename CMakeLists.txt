@@ -7,13 +7,22 @@ list(PREPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 option(WITH_SYMENGINE "With SymEngine" ON)
 option(WITH_GMPXX "With gmpxx" ON)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    option(WITH_CMAKE_FORMAT "With cmake-format" ON)
+    option(WITH_CLANG_FORMAT "With clang-format" ON)
+    option(WITH_CCACHE "With ccache" ON)
+endif()
 
 include(flags)
 include(packages)
 
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
+if (WITH_CMAKE_FORMAT)
     include(cmake-format)
+endif()
+if (WITH_CLANG_FORMAT)
     include(clang-format)
+endif()
+if (WITH_CCACHE)
     include(ccache)
 endif()
 
