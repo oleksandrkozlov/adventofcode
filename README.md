@@ -10,12 +10,33 @@ cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --parallel
 ```
 
+### Puzzle setup
+
+* `./aoc.sh` updates `CMakeLists.txt`, downloads `input`, creates `main.cpp`, builds, and runs it.
+
+* Set `AOC_SESSION`, then run:
+```
+./aoc.sh <year> <day>
+```
+For example:
+```
+./aoc.sh 2015 1
+```
+Result:
+```
+src/2015
+├── 01
+│   ├── input
+│   └── main.cpp
+└── CMakeLists.txt
+```
+
 ### Dependencies
 
-* [C++23](https://en.cppreference.com/w/cpp/23)
+* [C++26](https://en.cppreference.com/w/cpp/26.html)
 * [CMake](https://cmake.org)
-* [GMP](https://gmplib.org)
-* [Symengine](https://symengine.org)
 * [boost](https://www.boost.org)
 * [range-v3](https://ericniebler.github.io/range-v3)
 * [{fmt}](https://fmt.dev)
+* [GMP](https://gmplib.org) (optional)
+* [Symengine](https://symengine.org) (optional)

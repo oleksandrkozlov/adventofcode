@@ -2,10 +2,10 @@
 BasedOnStyle:  WebKit
 AlignAfterOpenBracket: AlwaysBreak
 AllowShortFunctionsOnASingleLine: None
-AlwaysBreakTemplateDeclarations: Yes
+BreakTemplateDeclarations: Yes
 BinPackArguments: false
-BinPackParameters: false
-ColumnLimit: 100
+BinPackParameters: OnePerLine
+ColumnLimit:     120
 FixNamespaceComments: true
 IncludeBlocks:   Regroup
 IncludeCategories:
@@ -15,13 +15,20 @@ IncludeCategories:
     Priority:        2
   - Regex:           '^<[^.]+>$'
     Priority:        3
-IncludeIsMainRegex: '(Tests)?$'
+IncludeIsMainRegex: '(_test)?$'
 Cpp11BracedListStyle: true
 NamespaceIndentation: None
 SpaceAfterTemplateKeyword: false
 SpaceBeforeCpp11BracedList: false
 PenaltyReturnTypeOnItsOwnLine: 999
-IndentCaseLabels: true
-BreakBeforeBinaryOperators: None
-AllowAllParametersOfDeclarationOnNextLine: false
+BreakBinaryOperations: RespectPrecedence
+SpaceInEmptyBlock: false
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseExpressionOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortCompoundRequirementOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
 ...
