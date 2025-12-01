@@ -28,3 +28,4 @@ endif()
 
 add_subdirectory(src/2022)
 add_subdirectory(src/2023)
+add_subdirectory(src/2025)
