@@ -18,7 +18,7 @@ constexpr auto input = std::invoke([] {
 
 auto part_n(int part) -> std::size_t
 {
-    constexpr auto to_sv = [](auto rng) -> std::string_view { return {rng.data(), rng.size()}; };
+    constexpr auto to_sv = [](auto rng) { return std::string_view{rng}; };
     constexpr auto to_num = [](auto sv) {
         auto result = 0uz;
         std::from_chars(sv.data(), sv.data() + sv.size(), result);
