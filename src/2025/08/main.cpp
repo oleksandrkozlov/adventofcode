@@ -1,9 +1,6 @@
 #include <bits/stdc++.h>
 #include <range/v3/all.hpp>
 
-#include <algorithm>
-#include <iterator>
-
 namespace {
 
 namespace rv = std::views;
@@ -52,8 +49,20 @@ constexpr auto unpair = []<typename F>(F&& f) {
     };
 };
 
-constexpr auto find_chain_with = [](auto&& chains, const point_t& p) {
-    return rng::find_if(chains, [&](auto&& conn) { return conn.contains(p); });
+constexpr auto to_distance = unpair([](auto&& p1, auto&& p2) {
+    auto&& [x1, y1, z1] = p1;
+    auto&& [x2, y2, z2] = p2;
+    return std::tuple{square_diff(x2, x1) + square_diff(y2, y1) + square_diff(z2, z1), p1, p2};
+});
+
+constexpr auto by_not_equal_to = unpair(std::not_equal_to{});
+
+constexpr auto by_distance = [](auto&& p) { return std::get<0>(p); };
+
+constexpr auto split_and_transform_to_coords = [] {
+    return rv::split('\n')
+        | rv::filter(std::not_fn(rng::empty))
+        | rv::transform([](auto&& line) { return to_coords(line | rv::split(',') | rv::transform(to_num)); });
 };
 
 } // namespace
@@ -71,57 +80,77 @@ struct std::hash<point_t> {
     }
 };
 
+template<typename Key>
+struct dsu {
+    auto add(const Key& x) -> void
+    {
+        if (parent.contains(x)) { return; }
+        parent[x] = x;
+        sz[x] = 1;
+        ++components;
+    }
+
+    auto add_range(auto&& xs) -> void
+    {
+        for (auto&& x : xs) { add(x); }
+    }
+
+    [[nodiscard]] auto find(const Key& x) const -> const Key&
+    {
+        if (parent[x] != x) { parent[x] = find(parent[x]); };
+        return parent[x];
+    }
+
+    auto unite(const Key& a, const Key& b) -> void
+    {
+        auto ra = find(a);
+        auto rb = find(b);
+        if (ra == rb) { return; };
+        if (sz[ra] < sz[rb]) { std::swap(ra, rb); }
+        parent[rb] = ra;
+        sz[ra] += sz[rb];
+        --components;
+    }
+
+    [[nodiscard]] auto group_size(const Key& x) const -> std::size_t
+    {
+        return sz[find(x)];
+    }
+
+    [[nodiscard]] auto all_group_sizes() const -> std::vector<std::size_t>
+    {
+        return parent
+            | rv::filter([&](auto&& kv) { return find(kv.first) == kv.first; })
+            | rv::transform([&](auto&& kv) { return sz[kv.first]; })
+            | rng::to<std::vector>();
+    }
+
+    mutable std::unordered_map<Key, Key> parent;
+    mutable std::unordered_map<Key, std::size_t> sz;
+    std::size_t components{};
+};
+
 [[nodiscard]] auto part_n(const int part) -> std::size_t
 {
-    auto coords = input | rv::split('\n') | rv::filter(std::not_fn(rng::empty)) | rv::transform([](auto&& line) {
-                      return to_coords(line | rv::split(',') | rv::transform(to_num));
-                  });
-    const auto distances
-        = rv::cartesian_product(coords, coords)
-        | rv::filter(unpair(std::not_equal_to{}))
-        | rv::transform(unpair([](auto&& p1, auto&& p2) {
-              auto&& [x1, y1, z1] = p1;
-              auto&& [x2, y2, z2] = p2;
-              return std::tuple{square_diff(x2, x1) + square_diff(y2, y1) + square_diff(z2, z1), p1, p2};
-          }))
+    auto coords = input | split_and_transform_to_coords();
+    const auto coords_size = rng::distance(coords);
+    const auto iterations = (coords_size * (coords_size - 1)) * 2;
+    const auto distances = rv::cartesian_product(coords, coords)
+        | rv::filter(by_not_equal_to)
+        | rv::transform(to_distance)
         | rng::to<std::vector>()
-        | ranges::actions::sort(std::less{}, [](auto&& p) { return std::get<0>(p); })
-        | rv::stride(2);
-    auto x1 = coord_t{};
-    auto x2 = coord_t{};
-    auto chains = std::list<std::unordered_set<point_t>>{};
-    for (auto&& [d, p1, p2] : distances | ranges::views::take(part == 1 ? AOC_ITERATIONS : rng::distance(distances))) {
-        const auto chain1 = find_chain_with(chains, p1);
-        const auto chain2 = find_chain_with(chains, p2);
-        const auto has_p1 = chain1 != chains.end();
-        const auto has_p2 = chain2 != chains.end();
-        if (not has_p1 and not has_p2) {
-            chains.push_back({p1, p2});
-        } else if (has_p1 and not has_p2) {
-            chain1->emplace(p2);
-        } else if (has_p2 and not has_p1) {
-            chain2->emplace(p1);
-        } else {
-            assert(has_p1 and has_p2);
-            if (*chain1 == *chain2) { continue; }
-            chain1->merge(*chain2);
-            chains.remove(*chain2);
-        }
-        x1 = std::get<0>(p1);
-        x2 = std::get<0>(p2);
+        | ranges::actions::sort(std::less{}, by_distance)
+        | rv::stride(2)
+        | rv::take(part == 1 ? AOC_ITERATIONS : iterations);
+
+    auto uf = dsu<point_t>{};
+    uf.add_range(coords);
+    for (auto&& [_, p1, p2] : distances) {
+        uf.unite(uf.find(p1), uf.find(p2));
+        if (part == 2 and uf.components == 1) { return std::get<0>(p1) * std::get<0>(p2); }
     }
-    if (part == 1) {
-        return rng::fold_left(
-            chains
-                | rv::transform(rng::size)
-                | rng::to<std::vector>()
-                | ranges::actions::sort(std::greater{})
-                | rv::take(3),
-            1,
-            std::multiplies{});
-    } else {
-        return x1 * x2;
-    }
+    return rng::fold_left(
+        uf.all_group_sizes() | ranges::actions::sort(std::greater{}) | rv::take(3), 1, std::multiplies{});
 }
 
 auto main() -> int
