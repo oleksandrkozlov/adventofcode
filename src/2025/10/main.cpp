@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <z3++.h>
 
 namespace {
 
@@ -15,12 +16,18 @@ constexpr auto input = std::invoke([] {
     };
     return std::string_view{result, sizeof(result)};
 });
-constexpr auto to_sv = [](auto rng) { return std::string_view{rng}; };
 
 constexpr auto to_num = [](auto sv) {
     auto result = std::size_t{};
     std::from_chars(std::data(sv), std::data(sv) + std::size(sv), result);
     return result;
+};
+
+constexpr auto unpair = []<typename F>(F&& f) {
+    return [f = std::forward<F>(f)](auto&& pair) {
+        auto&& [first, second] = pair;
+        return f(first, second);
+    };
 };
 
 auto press_buttons(
@@ -46,7 +53,7 @@ auto press_buttons(
     return best;
 }
 
-auto part_one() -> std::size_t
+[[nodiscard]] auto part_n(const int part) -> std::size_t
 { // clang-format off
     auto machines = input
         | rv::split('\n')
@@ -83,9 +90,39 @@ auto part_one() -> std::size_t
             return std::tuple{diagram, buttons, joltage};
     });
     return rng::fold_left(machines | rv::transform([&](auto&& machine) {
-        auto dp = std::unordered_map<std::string, size_t>{};
-        auto&& [pattern, combinations, _] = machine;
-        return press_buttons(dp, pattern, std::string(pattern.size(), '.'), combinations);
+        if (part == 1) {
+            auto dp = std::unordered_map<std::string, size_t>{};
+            auto&& [pattern, combinations, _] = machine;
+            return press_buttons(dp, pattern, std::string(pattern.size(), '.'), combinations);
+        } else {
+            auto ctx = z3::context{};
+            auto&& [_, combinations, joltages] = machine;
+            const auto vars = combinations
+                | rv::enumerate
+                | rv::transform([&](auto&& i) { return ctx.int_const(std::format("B{}", i).c_str()); })
+                | rng::to<std::vector>();
+            auto equals = joltages
+                | rv::enumerate
+                | rv::transform([&](auto&& js) {
+                    auto&& [i, joltage] = js;
+                    return ctx.int_val(joltage) == rng::fold_left(combinations | rv::enumerate | rv::filter([&](auto&& comb) {
+                        auto&& [_, buttons] = comb;
+                        return rng::contains(buttons, i);
+                    }) | rv::transform([&](auto&& comb) {
+                        auto&& [j, _] = comb;
+                        return vars[j];
+                    }) | rng::to<std::vector>(), ctx.int_val(0), std::plus{});
+                }) | rng::to<std::vector>();
+            auto optimizer = z3::optimize{ctx};
+            optimizer.minimize(rng::fold_left(vars, ctx.int_val(0), std::plus{}));
+            for (auto&& eq : equals) { optimizer.add(eq); }
+            for (auto&& var : vars) { optimizer.add(var >= 0); }
+            assert(optimizer.check());
+            auto model = optimizer.get_model();
+            return rng::fold_left(rv::iota(0u, model.size()) |  rv::transform([&](auto&& i){
+                return model.get_const_interp(model[i]).get_numeral_int64();
+            }), 0uz, std::plus{});
+        }
     }), 0, std::plus{});
 } // clang-format on
 
@@ -93,7 +130,9 @@ auto part_one() -> std::size_t
 
 auto main() -> int
 {
-    const auto result1 = part_one();
-    std::println("{}", result1);
+    const auto result1 = part_n(1);
+    const auto result2 = part_n(2);
+    std::println("{}\n{}", result1, result2);
     assert(result1 == 488);
+    assert(result2 == 18771);
 }

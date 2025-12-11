@@ -10,5 +10,8 @@ if (WITH_GMPXX)
     pkg_check_modules(gmpxx REQUIRED IMPORTED_TARGET "gmpxx")
     link_libraries(PkgConfig::gmpxx)
 endif()
+if (WITH_Z3)
+    find_package(Z3 REQUIRED)
+endif()
 
 link_libraries(fmt::fmt range-v3::range-v3 pthread Boost::boost)

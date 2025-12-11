@@ -40,3 +40,4 @@ src/2015
 * [{fmt}](https://fmt.dev)
 * [GMP](https://gmplib.org) (optional)
 * [Symengine](https://symengine.org) (optional)
+* [z3](https://github.com/Z3Prover/z3) (optional)
